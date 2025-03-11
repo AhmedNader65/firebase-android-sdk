@@ -9,7 +9,8 @@ jobs:
   update:
     runs-on: ubuntu-latest
     steps:
-      - run: |
+      - name: config identity
+        run: |
          git config --global user.email "ahmed.nader1994@gmail.com"
          git config --global user.name "Ahmed"
          
