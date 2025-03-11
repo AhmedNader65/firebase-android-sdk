@@ -1,0 +1,80 @@
+name: Update and Apply Modifications
+
+on:
+  schedule:
+    - cron: '0 0 * * *' # Run daily at midnight
+  workflow_dispatch:
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0 # Fetch all history for Git diff
+
+      - name: Add upstream repository
+        run: |
+          git remote add upstream https://github.com/firebase/firebase-android-sdk.git
+          git fetch upstream
+
+      - name: Get last merged upstream commit
+        id: last-merged
+        run: |
+          # Read the last merged upstream commit from a file (or use a Git tag)
+          if [ -f .last_merged_upstream_commit ]; then
+            LAST_MERGED=$(cat .last_merged_upstream_commit)
+            echo "Last merged upstream commit: $LAST_MERGED"
+            echo "last_merged_commit=$LAST_MERGED" >> $GITHUB_OUTPUT
+          else
+            echo "No last merged upstream commit found."
+            echo "last_merged_commit=" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Get latest upstream commit
+        id: latest-upstream
+        run: |
+          LATEST_UPSTREAM=$(git rev-parse upstream/main)
+          echo "Latest upstream commit: $LATEST_UPSTREAM"
+          echo "latest_upstream_commit=$LATEST_UPSTREAM" >> $GITHUB_OUTPUT
+
+      - name: Check for upstream updates
+        id: check-upstream
+        run: |
+          if [ "${{ steps.last-merged.outputs.last_merged_commit }}" == "${{ steps.latest-upstream.outputs.latest_upstream_commit }}" ]; then
+            echo "No new changes in upstream repository."
+            echo "has_upstream_changes=false" >> $GITHUB_OUTPUT
+          else
+            echo "New changes in upstream repository."
+            echo "has_upstream_changes=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Merge upstream changes
+        if: steps.check-upstream.outputs.has_upstream_changes == 'true'
+        run: |
+          git merge upstream/main
+          # Save the latest upstream commit for future reference
+          echo "${{ steps.latest-upstream.outputs.latest_upstream_commit }}" > .last_merged_upstream_commit
+          git add .last_merged_upstream_commit
+          git commit -m "Update last merged upstream commit"
+
+      - name: Apply custom modifications
+        if: steps.check-upstream.outputs.has_upstream_changes == 'true'
+        run: |
+          git apply custom_modifications.patch
+
+      - name: Build and test
+        if: steps.check-upstream.outputs.has_upstream_changes == 'true'
+        run: |
+          ./gradlew build
+          ./gradlew test
+
+      - name: Commit and push changes
+        if: steps.check-upstream.outputs.has_upstream_changes == 'true'
+        run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+          git add .
+          git commit -m "Automated update and modification"
+          git push origin main
