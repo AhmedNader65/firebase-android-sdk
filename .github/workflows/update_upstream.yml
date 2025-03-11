@@ -9,6 +9,10 @@ jobs:
   update:
     runs-on: ubuntu-latest
     steps:
+      - run: |
+         git config --global user.email "ahmed.nader1994@gmail.com"
+         git config --global user.name "Ahmed"
+         
       - name: Checkout repository
         uses: actions/checkout@v3
         with:
