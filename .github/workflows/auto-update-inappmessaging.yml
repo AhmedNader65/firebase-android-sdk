@@ -1,0 +1,65 @@
+name: Sync Upstream for JitPack
+
+on:
+  schedule:
+    - cron: '0 0 * * *'  # Daily check
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      # 1. Checkout your repo (shallow clone)
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 1
+
+      # 2. Fetch upstream changes
+      - name: Fetch upstream
+        run: |
+          git remote add upstream https://github.com/firebase/firebase-android-sdk.git
+          git fetch upstream --depth=1
+
+      # 3. Check if gradle.properties version changed
+      - name: Check version
+        id: check-version
+        run: |
+          UPSTREAM_VERSION=$(git show upstream/main:firebase-inappmessaging/gradle.properties | grep "version=" | cut -d "=" -f2 | tr -d '\r\n')
+          YOUR_VERSION=$(grep "version=" firebase-inappmessaging/gradle.properties | cut -d "=" -f2 | tr -d '\r\n')
+          if [ "$UPSTREAM_VERSION" = "$YOUR_VERSION" ]; then
+            echo "Version unchanged ($YOUR_VERSION). Skipping."
+            echo "should_update=false" >> $GITHUB_OUTPUT
+          else
+            echo "New version detected: $UPSTREAM_VERSION"
+            echo "should_update=true" >> $GITHUB_OUTPUT
+            echo "new_version=$UPSTREAM_VERSION" >> $GITHUB_OUTPUT
+          fi
+
+      # 4. If version changed, update fork + tag for JitPack
+      - name: Update and tag
+        if: steps.check-version.outputs.should_update == 'true'
+        run: |
+          # Pull only required folders (sparse checkout)
+          git config core.sparseCheckout true
+          echo "firebase-inappmessaging/" >> .git/info/sparse-checkout
+          echo "firebase-inappmessaging-display/" >> .git/info/sparse-checkout
+          git pull upstream main
+
+          # Update version in your fork
+          sed -i "s/version=.*/version=${{ steps.check-version.outputs.new_version }}/" firebase-inappmessaging/gradle.properties
+          git add firebase-inappmessaging/gradle.properties
+          git commit -m "Sync version: ${{ steps.check-version.outputs.new_version }}"
+
+          # Create and push a tag (JitPack requires this!)
+          git tag -a "v${{ steps.check-version.outputs.new_version }}" -m "Release ${{ steps.check-version.outputs.new_version }}"
+          git push origin main --tags
+
+      # 5. Print JitPack instructions
+      - name: JitPack info
+        if: steps.check-version.outputs.should_update == 'true'
+        run: |
+          echo "JitPack will now build:"
+          echo "Implementation URL:"
+          echo "implementation 'com.github.AhmedNader65/firebase-android-sdk:v${{ steps.check-version.outputs.new_version }}'"
+          echo "Build status: https://jitpack.io/AhmedNader65/firebase-android-sdk/v${{ steps.check-version.outputs.new_version }}"

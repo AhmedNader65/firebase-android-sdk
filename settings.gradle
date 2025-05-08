@@ -1,4 +1,6 @@
-// Copyright 2018 Google LLC
+plugins {
+  id 'org.gradle.toolchains.foojay-resolver-convention' version '0.8.0'
+}// Copyright 2018 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.

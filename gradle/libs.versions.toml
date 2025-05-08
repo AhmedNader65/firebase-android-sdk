@@ -17,6 +17,17 @@ quickcheck = "0.6"
 androidx-test-core="1.5.0"
 androidx-test-junit="1.1.5"
 androidx-test-truth = "1.5.0"
+kotlin-gradle-plugin = "2.0.0"
+core-ktx = "1.16.0"
+espresso-core = "3.6.1"
+lifecycle-runtime-ktx = "2.8.7"
+activity-compose = "1.10.1"
+compose-bom = "2024.04.01"
+appcompat = "1.7.0"
+material = "1.12.0"
+constraintlayout = "2.2.1"
+navigation-fragment-ktx = "2.8.9"
+navigation-ui-ktx = "2.8.9"
 
 [libraries]
 android-lint = { module = "com.android.tools.lint:lint", version.ref = "android-lint" }
@@ -61,6 +72,26 @@ kotest-runner = { module = "io.kotest:kotest-runner-junit4-jvm", version.ref = "
 kotest-assertions = { module = "io.kotest:kotest-assertions-core-jvm", version.ref = "kotest" }
 kotest-property = { module = "io.kotest:kotest-property-jvm", version.ref = "kotest" }
 quickcheck = { module = "net.java:quickcheck", version.ref = "quickcheck" }
+kotlin-gradle-plugin = { group = "org.jetbrains.kotlin", name = "kotlin-gradle-plugin", version.ref = "kotlin-gradle-plugin" }
+androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "core-ktx" }
+androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espresso-core" }
+androidx-lifecycle-runtime-ktx = { group = "androidx.lifecycle", name = "lifecycle-runtime-ktx", version.ref = "lifecycle-runtime-ktx" }
+androidx-activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "activity-compose" }
+androidx-compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "compose-bom" }
+androidx-ui = { group = "androidx.compose.ui", name = "ui" }
+androidx-ui-graphics = { group = "androidx.compose.ui", name = "ui-graphics" }
+androidx-ui-tooling = { group = "androidx.compose.ui", name = "ui-tooling" }
+androidx-ui-tooling-preview = { group = "androidx.compose.ui", name = "ui-tooling-preview" }
+androidx-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-manifest" }
+androidx-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4" }
+androidx-material3 = { group = "androidx.compose.material3", name = "material3" }
+androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
+material = { group = "com.google.android.material", name = "material", version.ref = "material" }
+androidx-constraintlayout = { group = "androidx.constraintlayout", name = "constraintlayout", version.ref = "constraintlayout" }
+androidx-navigation-fragment-ktx = { group = "androidx.navigation", name = "navigation-fragment-ktx", version.ref = "navigation-fragment-ktx" }
+androidx-navigation-ui-ktx = { group = "androidx.navigation", name = "navigation-ui-ktx", version.ref = "navigation-ui-ktx" }
+[plugins]
+
 
 [bundles]
 kotest = ["kotest-runner", "kotest-assertions", "kotest-property"]

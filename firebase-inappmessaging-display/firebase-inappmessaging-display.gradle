@@ -98,7 +98,7 @@ dependencies {
     implementation 'com.google.android.gms:play-services-tasks:18.0.1'
     implementation 'com.google.auto.value:auto-value-annotations:1.6.6'
     implementation 'javax.inject:javax.inject:1'
-    implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlinVersion"
+    implementation libs.kotlin.stdlib
 
     annotationProcessor 'com.github.bumptech.glide:compiler:4.11.0'
     annotationProcessor 'com.google.auto.value:auto-value:1.6.5'
