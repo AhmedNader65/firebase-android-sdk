@@ -40,10 +40,15 @@ jobs:
       - name: Update and tag
         if: steps.check-version.outputs.should_update == 'true'
         run: |
-          # Pull only required folders (sparse checkout)
+          # Configure merge strategy
+          git config pull.rebase false
+
+          # Sparse checkout
           git config core.sparseCheckout true
           echo "firebase-inappmessaging/" >> .git/info/sparse-checkout
           echo "firebase-inappmessaging-display/" >> .git/info/sparse-checkout
+
+          # Pull changes (with explicit merge)
           git pull upstream main
 
           # Update version in your fork
