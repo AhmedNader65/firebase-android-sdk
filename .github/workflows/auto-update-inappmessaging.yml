@@ -15,7 +15,10 @@ jobs:
         with:
           fetch-depth: 0  # Full history required
           ref: master     # Your fork's branch
-
+      - name: Set Git identity
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
       # 2. Fetch upstream properly
       - name: Fetch upstream
         run: |
