@@ -1,5 +1,4 @@
 jdk: openjdk17
 
 install:
-  - ./gradlew clean
   - ./gradlew :firebase-config:ktx:assemble :firebase-config:assemble -x :firebase-config:test-app:
