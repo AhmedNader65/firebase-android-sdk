@@ -7,5 +7,5 @@ install:
     -x :firebase-dataconnect:lint
     -x test
     -x :*Test*
-    -x :*:lint*
+    -x :*Lint*
     --no-daemon
