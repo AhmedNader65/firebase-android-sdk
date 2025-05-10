@@ -6,7 +6,7 @@ install:
     -x :firebase-dataconnect:connectors:generateDebugDataConnectSources
     -x :firebase-dataconnect:lint
     -x test
-    -x :*:test*:*
-    -x :*:*Test*
+    -x :*Test*
+    -x :*:test*
     -x :*:lint*
     --no-daemon
