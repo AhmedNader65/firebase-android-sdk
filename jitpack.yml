@@ -1,4 +1,5 @@
 jdk: openjdk17
 
 install:
-  - ./gradlew build -x test -x lint -x :firebase-config:test-app:processDebugGoogleServices
+  - ./gradlew clean
+  - ./gradlew :firebase-config:ktx:assemble :firebase-config:assemble -x :firebase-config:test-app:
