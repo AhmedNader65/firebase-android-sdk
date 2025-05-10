@@ -1,5 +1,39 @@
 jdk: openjdk17
 
+before_install:
+  - mkdir -p firebase-config/test-app
+  - cat > firebase-config/test-app/google-services.json << EOL
+  {
+    "project_info": {
+      "project_number": "000000000000",
+      "firebase_url": "https://dummy-project.firebaseio.com",
+      "project_id": "dummy-project",
+      "storage_bucket": "dummy-project.appspot.com"
+    },
+    "client": [
+      {
+        "client_info": {
+          "mobilesdk_app_id": "1:000000000000:android:0000000000000000",
+          "android_client_info": {
+            "package_name": "com.google.firebase.config.testapp"
+          }
+        },
+        "oauth_client": [],
+        "api_key": [
+          {
+            "current_key": "dummy_api_key"
+          }
+        ],
+        "services": {
+          "appinvite_service": {
+            "other_platform_oauth_client": []
+          }
+        }
+      }
+    ],
+    "configuration_version": "1"
+  }
+  EOL
 install:
   - >-
     ./gradlew assemble
