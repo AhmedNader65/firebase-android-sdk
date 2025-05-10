@@ -1,4 +1,5 @@
 jdk:
-  - openjdk17
+  - openjdk11
 install:
-  - INCLUDE_TEST_APP=false ./gradlew :firebase-config:assembleRelease :firebase-config:ktx:assembleRelease
+  - ./gradlew clean
+  - ./gradlew assemble -x test -x androidTest -x ":firebase-config:test-app"
