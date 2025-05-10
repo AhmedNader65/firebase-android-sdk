@@ -2,4 +2,8 @@ jdk:
   - openjdk17
 install:
   - ./gradlew clean
-  - ./gradlew assemble -x test --exclude-task :firebase-config:test-app:assemble
+  - >
+    ./gradlew assemble -x test
+    -x ":firebase-config:test-app:assemble"
+    -x ":firebase-dataconnect:connectors:generateDebugDataConnectSources"
+    -x ":firebase-dataconnect:connectors:generateReleaseDataConnectSources"
