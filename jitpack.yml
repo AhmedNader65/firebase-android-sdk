@@ -1,4 +1,4 @@
-jdk: openjdk17
-
+jdk:
+  - openjdk17
 install:
-  - ./gradlew :firebase-config:ktx:assemble :firebase-config:assemble -x :firebase-config:test-app:
+  - INCLUDE_TEST_APP=false ./gradlew :firebase-config:assembleRelease :firebase-config:ktx:assembleRelease
