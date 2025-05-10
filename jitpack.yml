@@ -2,4 +2,4 @@ jdk:
   - openjdk17
 install:
   - ./gradlew clean
-  - ./gradlew assemble -x test -x androidTest -x ":firebase-config:test-app"
+  - ./gradlew assemble -x test -x ":firebase-config:test-app"
