@@ -1,0 +1,74 @@
+name: Sync Full Firebase Repository
+
+on:
+  schedule:
+    - cron: '0 0 * * *'  # Daily check
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      # 1. Full checkout
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      # 2. Set Git identity
+      - name: Set Git identity
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+
+      # 3. Fetch upstream
+      - name: Fetch upstream
+        run: |
+          git remote add upstream https://github.com/firebase/firebase-android-sdk.git
+          git fetch upstream main --depth=1
+
+      # 4. Check version changes (still using inappmessaging as reference)
+      - name: Check version
+        id: check-version
+        run: |
+          UPSTREAM_VERSION=$(git show upstream/main:firebase-inappmessaging/gradle.properties | grep "version=" | cut -d "=" -f2 | tr -d '\r\n[:space:]')
+          YOUR_VERSION=$(grep "version=" firebase-inappmessaging/gradle.properties | cut -d "=" -f2 | tr -d '\r\n[:space:]')
+          
+          echo "Comparing: Upstream=$UPSTREAM_VERSION vs Yours=$YOUR_VERSION"
+          
+          if [ "$UPSTREAM_VERSION" = "$YOUR_VERSION" ]; then
+            echo "Version unchanged ($YOUR_VERSION). Skipping."
+            echo "should_update=false" >> $GITHUB_OUTPUT
+          else
+            echo "New version detected: $UPSTREAM_VERSION"
+            echo "should_update=true" >> $GITHUB_OUTPUT
+            echo "new_version=$UPSTREAM_VERSION" >> $GITHUB_OUTPUT
+          fi
+
+      # 5. Full repository update
+      - name: Update all Firebase modules
+        if: steps.check-version.outputs.should_update == 'true'
+        run: |
+          # Reset entire working directory to upstream state
+          git reset --hard upstream/main
+          
+          # Update version in all relevant modules
+          find . -name gradle.properties | xargs -I {} sed -i "s/version=.*/version=${{ steps.check-version.outputs.new_version }}/" {}
+          
+          # Commit changes
+          git add .
+          git commit -m "Update to v${{ steps.check-version.outputs.new_version }} [Full Sync]"
+          
+          # Tag and push
+          git tag -a "v${{ steps.check-version.outputs.new_version }}" -m "Release ${{ steps.check-version.outputs.new_version }}"
+          git push origin main --tags --force
+
+      # 6. JitPack info
+      - name: JitPack info
+        if: steps.check-version.outputs.should_update == 'true'
+        run: |
+          echo "JitPack will now build all modules:"
+          echo "implementation 'com.github.AhmedNader65:firebase-android-sdk:v${{ steps.check-version.outputs.new_version }}'"
+          echo "Or select specific modules:"
+          echo "implementation 'com.github.AhmedNader65:firebase-android-sdk:firebase-inappmessaging-v${{ steps.check-version.outputs.new_version }}'"
+          echo "Build status: https://jitpack.io/#AhmedNader65/firebase-android-sdk"
