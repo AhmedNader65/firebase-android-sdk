@@ -1,11 +1,12 @@
 jdk: openjdk17
 
 install:
-  - ./gradlew assemble \
-    -x :firebase-dataconnect:connectors:generateDebugDataConnectSources \
-    -x :firebase-dataconnect:lint \
-    -x test \
-    -x :*:test*:* \
-    -x :*:*Test* \
-    -x :*:lint* \
+  - >-
+    ./gradlew assemble
+    -x :firebase-dataconnect:connectors:generateDebugDataConnectSources
+    -x :firebase-dataconnect:lint
+    -x test
+    -x :*:test*:*
+    -x :*:*Test*
+    -x :*:lint*
     --no-daemon
