@@ -14,12 +14,15 @@ jobs:
         with:
           repository: AhmedNader65/firebase-android-sdk
           path: your-repo
+          ref: main
+          fetch-depth: 0 # Full history for accurate merging
 
       - name: Checkout original repository
         uses: actions/checkout@v4
         with:
           repository: firebase/firebase-android-sdk
           path: original-repo
+          fetch-depth: 0 # Full history for branch sorting
 
       - name: Set up JDK 11
         uses: actions/setup-java@v4
@@ -40,8 +43,8 @@ jobs:
       - name: Compare versions
         id: compare-versions
         run: |
-          YOUR_VERSION=$(grep '^version=' your-repo/firebase-inappmessaging/gradle.properties | cut -d'=' -f2)
-          ORIGINAL_VERSION=$(grep '^version=' original-repo/firebase-inappmessaging/gradle.properties | cut -d'=' -f2)
+          YOUR_VERSION=$(grep '^version=' your-repo/firebase-inappmessaging/gradle.properties | cut -d'=' -f2 || echo "0.0.0")
+          ORIGINAL_VERSION=$(grep '^version=' original-repo/firebase-inappmessaging/gradle.properties | cut -d'=' -f2 || echo "0.0.0")
           echo "Your version: $YOUR_VERSION"
           echo "Original version: $ORIGINAL_VERSION"
           if [ "$YOUR_VERSION" != "$ORIGINAL_VERSION" ]; then
@@ -82,7 +85,7 @@ jobs:
           else
             echo "Merge successful."
             echo "conflict_detected=false" >> $GITHUB_OUTPUT
-            git merge --continue
+            git commit -m "Merge firebase-inappmessaging version ${{ steps.compare-versions.outputs.new_version }}"
             git push origin main
           fi
         shell: bash
