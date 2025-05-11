@@ -18,8 +18,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 
 import com.google.firebase.abt.FirebaseABTesting;
-import com.google.firebase.concurrent.TestOnlyExecutors;
 import com.google.firebase.inappmessaging.MessagesProto;
+import com.google.firebase.inappmessaging.TestOnlyExecutors;
 import com.google.internal.firebase.inappmessaging.v1.CampaignProto;
 import com.google.internal.firebase.inappmessaging.v1.sdkserving.FetchEligibleCampaignsResponse;
 import org.junit.Before;

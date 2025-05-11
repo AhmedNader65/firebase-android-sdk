@@ -14,11 +14,9 @@
  * limitations under the License.
  */
 
-import com.diffplug.gradle.spotless.SpotlessPlugin
 import java.util.regex.Pattern
 
 plugins {
-  alias(libs.plugins.spotless)
   alias(libs.plugins.protobuf) apply false
   alias(libs.plugins.errorprone)
   alias(libs.plugins.crashlytics) apply false
@@ -44,29 +42,6 @@ firebaseContinuousIntegration {
     )
 }
 
-fun Project.applySpotless() {
-  apply<SpotlessPlugin>()
-  spotless {
-    java {
-      target("src/**/*.java")
-      targetExclude("**/test/resources/**")
-      googleJavaFormat("1.22.0").reorderImports(true).skipJavadocFormatting()
-    }
-    kotlin {
-      target("src/**/*.kt")
-      ktfmt("0.41").googleStyle()
-    }
-    kotlinGradle {
-      target("*.gradle.kts") // default target for kotlinGradle
-      ktfmt("0.41").googleStyle()
-    }
-  }
-}
-
-applySpotless()
-
-configure(subprojects) { applySpotless() }
-
-tasks.named("clean") { delete(rootProject.layout.buildDirectory) }
+//tasks.named("clean") { delete(rootProject.layout.buildDirectory) }
 
 apply(from = "gradle/errorProne.gradle")

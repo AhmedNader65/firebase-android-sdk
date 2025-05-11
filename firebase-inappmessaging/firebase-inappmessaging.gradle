@@ -155,12 +155,9 @@ dependencies {
     annotationProcessor libs.auto.value.parcel
     annotationProcessor libs.dagger.compiler
 
+    api 'com.google.firebase:firebase-common:21.0.0'
+    testImplementation 'com.google.firebase:firebase-common:21.0.0'
     androidTestAnnotationProcessor libs.dagger.compiler
-
-    testImplementation(project(":integ-testing")){
-        exclude group: 'com.google.firebase', module: 'firebase-common'
-        exclude group: 'com.google.firebase', module: 'firebase-components'
-    }
     testImplementation libs.androidx.test.core
     testImplementation libs.androidx.test.runner
     testImplementation libs.androidx.test.junit
@@ -174,10 +171,6 @@ dependencies {
          exclude group: 'com.google.protobuf', module: 'protobuf-java'
      }
 
-    androidTestImplementation(project(":integ-testing")){
-        exclude group: 'com.google.firebase', module: 'firebase-common'
-        exclude group: 'com.google.firebase', module: 'firebase-components'
-    }
     androidTestImplementation libs.androidx.annotation
     androidTestImplementation libs.androidx.test.runner
     androidTestImplementation libs.androidx.test.junit
