@@ -53,18 +53,29 @@ publishing {
             groupId = 'com.github.AhmedNader65'
             artifactId = 'firebase-inappmessaging'
             version = project.version
+
             afterEvaluate {
                 from components.findByName('release')
                 pom {
-                    withXml {
-                        def dependenciesNode = asNode().appendNode('dependencies')
-                        configurations.api.allDependencies.each { dependency ->
-                            def dependencyNode = dependenciesNode.appendNode('dependency')
-                            dependencyNode.appendNode('groupId', dependency.group)
-                            dependencyNode.appendNode('artifactId', dependency.name)
-                            dependencyNode.appendNode('version', dependency.version)
-                            dependencyNode.appendNode('scope', 'compile')
+                    name = 'Firebase In-App Messaging'
+                    description = 'Firebase In-App Messaging Android SDK'
+                    url = 'https://github.com/AhmedNader65/firebase-android-sdk'
+                    licenses {
+                        license {
+                            name = 'The Apache License, Version 2.0'
+                            url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
                         }
+                    }
+                    developers {
+                        developer {
+                            id = 'AhmedNader65'
+                            name = 'Ahmed Nader'
+                        }
+                    }
+                    scm {
+                        connection = 'scm:git:git://github.com/AhmedNader65/firebase-android-sdk.git'
+                        developerConnection = 'scm:git:ssh://github.com/AhmedNader65/firebase-android-sdk.git'
+                        url = 'https://github.com/AhmedNader65/firebase-android-sdk'
                     }
                 }
             }
