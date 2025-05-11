@@ -142,9 +142,9 @@ jobs:
         if: steps.compare-versions.outputs.update_needed == 'true' && steps.pull-changes.outputs.conflict_detected == 'false'
         run: |
           cd your-repo
-          git tag v${{ steps.compare-versions.outputs.new_version }}-test3
-          git push origin v${{ steps.compare-versions.outputs.new_version }}-test3 || { echo "Failed to push tag"; exit 1; }
-          echo "Created and pushed tag v${{ steps.compare-versions.outputs.new_version }}-test3 for JitPack."
+          git tag v${{ steps.compare-versions.outputs.new_version }}-test4
+          git push origin v${{ steps.compare-versions.outputs.new_version }}-test4 || { echo "Failed to push tag"; exit 1; }
+          echo "Created and pushed tag v${{ steps.compare-versions.outputs.new_version }}-test4 for JitPack."
         shell: bash
 
       - name: JitPack info
