@@ -34,7 +34,7 @@ jobs:
         id: find-branch
         run: |
           cd original-repo
-          LATEST_BRANCH=$(git branch -r | grep 'origin/release/' | sort -V | tail -n 1 | sed 's|origin/||')
+          LATEST_BRANCH=$(git branch -r | grep 'origin/releases/' | sort -V | tail -n 1 | sed 's|origin/||')
           echo "Latest release branch: $LATEST_BRANCH"
           git checkout $LATEST_BRANCH
           echo "branch=$LATEST_BRANCH" >> $GITHUB_OUTPUT
