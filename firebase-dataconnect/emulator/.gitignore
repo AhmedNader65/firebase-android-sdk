@@ -1,7 +1,0 @@
-.dataconnect/
-/cli
-/*.tools.json
-/firebase-debug.log
-/.firebase/
-/ui-debug.log
-/dataconnect-debug.log

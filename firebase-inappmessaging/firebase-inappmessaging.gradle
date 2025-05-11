@@ -13,19 +13,10 @@
 // limitations under the License.
 
 plugins {
-    id 'firebase-library'
+    id("com.android.library")
     id("kotlin-android")
     id 'com.google.protobuf'
-    id 'firebase-vendor'
-}
-
-firebaseLibrary {
-    libraryGroup = "inappmessaging"
-    testLab.enabled = true
-    releaseNotes {
-        name.set("{{inappmessaging}}")
-        versionName.set("inappmessaging")
-    }
+    id 'maven-publish'
 }
 
 protobuf {
@@ -52,12 +43,27 @@ protobuf {
         }
     }
 }
+publishing {
+    publications {
+        release(MavenPublication) {
+            groupId = 'com.github.AhmedNader65'
+            artifactId = 'firebase-inappmessaging'
+            version = '1.0.0'
+            afterEvaluate {
+                from components.findByName('release')
+            }
+        }
+    }
+}
 
 android {
     adbOptions {
         timeOutInMs 60 * 1000
     }
 
+    buildFeatures {
+        buildConfig = true
+    }
     namespace "com.google.firebase.inappmessaging"
     compileSdkVersion project.compileSdkVersion
     defaultConfig {
@@ -67,6 +73,11 @@ android {
       versionName version
       testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
       consumerProguardFiles 'proguard.txt'
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+        }
     }
     sourceSets {
         main {
@@ -102,15 +113,12 @@ android {
 }
 
 
-thirdPartyLicenses {
-    add 'Dagger', "${rootDir}/third_party/licenses/apache-2.0.txt"
-}
-
 dependencies {
-    vendor (libs.dagger.dagger) {
-         exclude group: "javax.inject", module: "javax.inject"
-     }
-
+    implementation(libs.dagger.dagger){
+        exclude group: 'javax.inject', module: 'javax.inject'
+    }
+    annotationProcessor(libs.dagger.compiler)
+    androidTestAnnotationProcessor(libs.dagger.compiler)
     api project(':protolite-well-known-types')
     api libs.playservices.tasks
     api('com.google.firebase:firebase-abt:21.1.1') {

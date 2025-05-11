@@ -14,15 +14,9 @@
 
 
 plugins {
-    id 'firebase-library'
+    id("com.android.library")
 }
 
-firebaseLibrary {
-    publishJavadoc = false
-    releaseNotes { 
-        enabled.set(false)
-    }
-}
 
 android {
     namespace "com.google.firebase.installations.interop"

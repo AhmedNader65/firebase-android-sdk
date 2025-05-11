@@ -27,7 +27,6 @@ pluginManagement {
   }
 
   includeBuild("./plugins")
-  includeBuild("firebase-dataconnect/gradleplugin")
 }
 
 @Suppress("UnstableApiUsage")

@@ -13,14 +13,8 @@
 // limitations under the License.
 
 plugins {
-  id("firebase-library")
   id("kotlin-android")
-}
-
-firebaseLibrary {
-  libraryGroup = "common"
-  testLab.enabled = true
-  releaseNotes { enabled = false }
+  id("com.android.library")
 }
 
 android {

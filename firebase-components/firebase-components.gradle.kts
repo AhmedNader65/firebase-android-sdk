@@ -12,12 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-plugins { id("firebase-library") }
-
-firebaseLibrary {
-  publishJavadoc = false
-  releaseNotes { enabled.set(false) }
-}
+plugins { id("com.android.library") }
 
 android {
   val compileSdkVersion: Int by rootProject

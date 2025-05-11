@@ -13,16 +13,9 @@
 // limitations under the License.
 
 plugins {
-    id 'firebase-library'
+    id("com.android.library")
     id("kotlin-android")
-}
-
-firebaseLibrary {
-    libraryGroup = "inappmessaging"
-    publishJavadoc = false
-    releaseNotes { 
-        enabled.set(false)
-    }
+    id 'maven-publish'
 }
 
 android {
@@ -45,6 +38,18 @@ android {
         jvmTarget = '1.8'
     }
     testOptions.unitTests.includeAndroidResources = true
+}
+publishing {
+    publications {
+        release(MavenPublication) {
+            groupId = 'com.github.AhmedNader65'
+            artifactId = 'firebase-inappmessaging-ktx'
+            version = '1.0.0'
+            afterEvaluate {
+                from components.release
+            }
+        }
+    }
 }
 
 dependencies {
