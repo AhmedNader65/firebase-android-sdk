@@ -55,6 +55,18 @@ publishing {
             version = project.version
             afterEvaluate {
                 from components.findByName('release')
+                pom {
+                    withXml {
+                        def dependenciesNode = asNode().appendNode('dependencies')
+                        configurations.api.allDependencies.each { dependency ->
+                            def dependencyNode = dependenciesNode.appendNode('dependency')
+                            dependencyNode.appendNode('groupId', dependency.group)
+                            dependencyNode.appendNode('artifactId', dependency.name)
+                            dependencyNode.appendNode('version', dependency.version)
+                            dependencyNode.appendNode('scope', 'compile')
+                        }
+                    }
+                }
             }
         }
     }
@@ -125,22 +137,14 @@ dependencies {
     androidTestAnnotationProcessor(libs.dagger.compiler)
     api libs.playservices.tasks
     api project(':protolite-well-known-types')
-    api('com.google.firebase:firebase-abt:21.1.1') {
-         exclude group: 'com.google.firebase', module: 'firebase-common'
-         exclude group: 'com.google.firebase', module: 'firebase-components'
-     }
-    implementation("com.google.firebase:firebase-common:21.0.0")
-    implementation("com.google.firebase:firebase-common-ktx:21.0.0")
-    api("com.google.firebase:firebase-components:18.0.0")
-    api("com.google.firebase:firebase-datatransport:18.2.0"){
-         exclude group: 'com.google.firebase', module: 'firebase-common'
-         exclude group: 'com.google.firebase', module: 'firebase-components'
-     }
-    api("com.google.firebase:firebase-installations:17.2.0")
-    api 'com.google.firebase:firebase-installations-interop:17.1.0'
-    api('com.google.firebase:firebase-measurement-connector:18.0.2') {
-         exclude group: 'com.google.firebase', module: 'firebase-common'
-     }
+    api('com.google.firebase:firebase-abt:21.1.1')
+    api("com.google.firebase:firebase-common:21.1.1")
+    api("com.google.firebase:firebase-common-ktx:21.1.1")
+    api("com.google.firebase:firebase-components:21.1.1")
+    api("com.google.firebase:firebase-datatransport:21.1.1")
+    api("com.google.firebase:firebase-installations:21.1.1")
+    api('com.google.firebase:firebase-installations-interop:21.1.1')
+    api('com.google.firebase:firebase-measurement-connector:21.1.1')
 
     implementation libs.androidx.annotation
     implementation 'com.google.android.datatransport:transport-api:3.0.0'
