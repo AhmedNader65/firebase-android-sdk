@@ -43,12 +43,16 @@ protobuf {
         }
     }
 }
+def props = new Properties()
+file('gradle.properties').withInputStream { props.load(it) }
+version = props.getProperty('version', '0.0.0')
+
 publishing {
     publications {
         release(MavenPublication) {
             groupId = 'com.github.AhmedNader65'
             artifactId = 'firebase-inappmessaging'
-            version = '1.0.0'
+            version = project.version
             afterEvaluate {
                 from components.findByName('release')
             }
@@ -119,8 +123,8 @@ dependencies {
     }
     annotationProcessor(libs.dagger.compiler)
     androidTestAnnotationProcessor(libs.dagger.compiler)
-    api project(':protolite-well-known-types')
     api libs.playservices.tasks
+    api project(':protolite-well-known-types')
     api('com.google.firebase:firebase-abt:21.1.1') {
          exclude group: 'com.google.firebase', module: 'firebase-common'
          exclude group: 'com.google.firebase', module: 'firebase-components'
@@ -155,8 +159,6 @@ dependencies {
     annotationProcessor libs.auto.value.parcel
     annotationProcessor libs.dagger.compiler
 
-    api 'com.google.firebase:firebase-common:21.0.0'
-    testImplementation 'com.google.firebase:firebase-common:21.0.0'
     androidTestAnnotationProcessor libs.dagger.compiler
     testImplementation libs.androidx.test.core
     testImplementation libs.androidx.test.runner

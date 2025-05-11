@@ -14,26 +14,14 @@
 
 plugins {
     id("com.android.library")
-    id 'com.google.protobuf'
+    id('com.google.protobuf')
+    id('maven-publish')
 }
 
-protobuf {
-    protoc {
-        artifact = libs.protoc.get().toString()
-    }
-    generateProtoTasks {
-        all().each { task ->
-
-            task.addIncludeDir(files('fix-javalite/proto'))
-
-            task.builtins {
-                java {
-                    option "lite"
-                }
-            }
-        }
-    }
-}
+// Load version from properties file
+def props = new Properties()
+file('../firebase-inappmessaging/gradle.properties').withInputStream { props.load(it) }
+version = props.getProperty('version', '0.0.0')
 
 android {
     namespace "firebase.com.protolitewrapper"
@@ -56,6 +44,79 @@ android {
     sourceSets.main.resources.srcDirs = ['build/extracted-protos/main/', 'src/main/proto']
 }
 
+protobuf {
+    protoc {
+        artifact = libs.protoc.get().toString()
+    }
+    generateProtoTasks {
+        all().each { task ->
+            task.addIncludeDir(files('fix-javalite/proto'))
+            task.builtins {
+                java {
+                    option "lite"
+                }
+            }
+        }
+    }
+}
+
+// Create sources JAR task
+tasks.register('sourcesJar', Jar) {
+    from android.sourceSets.main.java.srcDirs
+    archiveClassifier.set('sources')
+    dependsOn('compileReleaseJavaWithJavac')
+}
+
+// Create empty Javadoc JAR to satisfy Maven Central requirements
+tasks.register('javadocJar', Jar) {
+    archiveClassifier.set('javadoc')
+}
+
+// Setup publishing
+publishing {
+    publications {
+        release(MavenPublication) {
+            groupId = 'com.github.AhmedNader65'
+            artifactId = 'protolite-well-known-types'
+            version = project.version
+
+            afterEvaluate {
+                // The main artifact - the AAR file
+                artifact(layout.buildDirectory.file("outputs/aar/${project.name}-release.aar"))
+            }
+
+            // Add sources and javadoc artifacts
+            artifact(tasks.named('sourcesJar'))
+            artifact(tasks.named('javadocJar'))
+
+            // POM information
+            pom {
+                name = 'Protolite Well Known Types'
+                description = 'Protocol Buffer library with well known types'
+                url = 'https://github.com/AhmedNader65/firebase-android-sdk'
+
+                licenses {
+                    license {
+                        name = 'The Apache License, Version 2.0'
+                        url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                    }
+                }
+
+                developers {
+                    developer {
+                        id = 'ahmednader65'
+                        name = 'Ahmed Nader'
+                    }
+                }
+            }
+        }
+    }
+}
+
+// Make sure the AAR is built before publishing
+tasks.withType(AbstractPublishToMaven).configureEach {
+    dependsOn tasks.named('assembleRelease')
+}
 
 dependencies {
     protobuf(libs.proto.google.common.protos){
