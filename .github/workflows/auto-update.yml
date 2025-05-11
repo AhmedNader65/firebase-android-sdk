@@ -15,14 +15,17 @@ jobs:
           repository: AhmedNader65/firebase-android-sdk
           path: your-repo
           ref: main
-          fetch-depth: 0 # Full history for accurate merging
+          fetch-depth: 0
 
-      - name: Checkout original repository
+      - name: Checkout original repository with sparse checkout
         uses: actions/checkout@v4
         with:
           repository: firebase/firebase-android-sdk
           path: original-repo
-          fetch-depth: 0 # Full history for branch sorting
+          fetch-depth: 0
+          sparse-checkout: |
+            firebase-inappmessaging/
+          sparse-checkout-cone-mode: false
 
       - name: Set up JDK 11
         uses: actions/setup-java@v4
@@ -34,9 +37,14 @@ jobs:
         id: find-branch
         run: |
           cd original-repo
-          LATEST_BRANCH=$(git branch -r | grep 'origin/releases/' | sort -V | tail -n 1 | sed 's|origin/||')
+          echo "Listing remote branches:"
+          git branch -r
+          LATEST_BRANCH=$(git branch -r | grep 'origin/release/' | sort -V | tail -n 1 | sed 's|origin/||' || echo "main")
+          if [ -z "$LATEST_BRANCH" ]; then
+            LATEST_BRANCH="main"
+          fi
           echo "Latest release branch: $LATEST_BRANCH"
-          git checkout $LATEST_BRANCH
+          git checkout $LATEST_BRANCH || { echo "Failed to checkout $LATEST_BRANCH"; exit 1; }
           echo "branch=$LATEST_BRANCH" >> $GITHUB_OUTPUT
         shell: bash
 
@@ -66,22 +74,45 @@ jobs:
           git config user.email "actions@github.com"
           git checkout main
           git checkout -b update-firebase-inappmessaging-${{ steps.compare-versions.outputs.new_version }}
-          
-          # Copy firebase-inappmessaging from original repo
-          rm -rf firebase-inappmessaging
-          cp -r ../original-repo/firebase-inappmessaging .
-          
-          # Add and commit changes
+
+          # Back up critical files
+          mkdir -p ../backup
+          cp -r firebase-inappmessaging/build.gradle ../backup/ || true
+          cp -r firebase-inappmessaging/ktx ../backup/ktx || true
+          cp -r firebase-inappmessaging/src/test/java/com/google/firebase/inappmessaging/AbtIntegrationHelperTest.java ../backup/ || true
+
+          # Enable sparse checkout and pull upstream changes
+          git config core.sparseCheckout true
+          echo "firebase-inappmessaging/" > .git/info/sparse-checkout
+          git remote add upstream https://github.com/firebase/firebase-android-sdk.git
+          git fetch upstream ${{ steps.find-branch.outputs.branch }}
+          git pull --no-rebase upstream ${{ steps.find-branch.outputs.branch }} || {
+            echo "Merge conflict detected during pull!"
+            echo "conflict_detected=true" >> $GITHUB_OUTPUT
+            git merge --abort
+            git checkout main
+            git branch -D update-firebase-inappmessaging-${{ steps.compare-versions.outputs.new_version }}
+            exit 0
+          }
+
+          # Restore critical files
+          mv ../backup/build.gradle firebase-inappmessaging/build.gradle || true
+          mv ../backup/ktx firebase-inappmessaging/ktx || true
+          mv ../backup/AbtIntegrationHelperTest.java firebase-inappmessaging/src/test/java/com/google/firebase/inappmessaging/AbtIntegrationHelperTest.java || true
+
+          # Update version in gradle.properties
+          sed -i "s/version=.*/version=${{ steps.compare-versions.outputs.new_version }}/" firebase-inappmessaging/gradle.properties
           git add firebase-inappmessaging
-          git commit -m "Update firebase-inappmessaging to version ${{ steps.compare-versions.outputs.new_version }}"
-          
-          # Try to merge into main
+          git commit -m "Sync firebase-inappmessaging to version ${{ steps.compare-versions.outputs.new_version }}"
+
+          # Merge into main
           git checkout main
           MERGE_RESULT=$(git merge --no-commit --no-ff update-firebase-inappmessaging-${{ steps.compare-versions.outputs.new_version }} 2>&1 || true)
           if echo "$MERGE_RESULT" | grep -q "CONFLICT"; then
             echo "Merge conflict detected!"
             echo "conflict_detected=true" >> $GITHUB_OUTPUT
             git merge --abort
+            git branch -D update-firebase-inappmessaging-${{ steps.compare-versions.outputs.new_version }}
           else
             echo "Merge successful."
             echo "conflict_detected=false" >> $GITHUB_OUTPUT
@@ -111,7 +142,16 @@ jobs:
         if: steps.compare-versions.outputs.update_needed == 'true' && steps.pull-changes.outputs.conflict_detected == 'false'
         run: |
           cd your-repo
-          git tag ${{ steps.compare-versions.outputs.new_version }}
-          git push origin ${{ steps.compare-versions.outputs.new_version }}
-          echo "Created and pushed tag ${{ steps.compare-versions.outputs.new_version }} for JitPack."
+          git tag v${{ steps.compare-versions.outputs.new_version }}
+          git push origin v${{ steps.compare-versions.outputs.new_version }} || { echo "Failed to push tag"; exit 1; }
+          echo "Created and pushed tag v${{ steps.compare-versions.outputs.new_version }} for JitPack."
+        shell: bash
+
+      - name: JitPack info
+        if: steps.compare-versions.outputs.update_needed == 'true' && steps.pull-changes.outputs.conflict_detected == 'false'
+        run: |
+          echo "JitPack will now build:"
+          echo "Implementation URL:"
+          echo "implementation 'com.github.AhmedNader65:firebase-android-sdk:v${{ steps.compare-versions.outputs.new_version }}'"
+          echo "Build status: https://jitpack.io/#AhmedNader65/firebase-android-sdk/v${{ steps.compare-versions.outputs.new_version }}"
         shell: bash
