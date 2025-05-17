@@ -83,7 +83,7 @@ jobs:
 
           # Create a patch of our customizations since that commit
           echo "Creating patch of our customizations..."
-          git format-patch $LAST_MERGE_COMMIT -o ../our-patches --stdout > ../our-changes.patch
+          git format-patch $LAST_MERGE_COMMIT --stdout > ../our-changes.patch
 
           # Create a new branch for the update
           git checkout -b update-firebase-inappmessaging-${{ steps.compare-versions.outputs.new_version }}
