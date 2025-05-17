@@ -76,16 +76,48 @@ jobs:
           # Create a new branch for the update
           git checkout -b update-firebase-inappmessaging-${{ steps.compare-versions.outputs.new_version }}
 
-          # Copy firebase-inappmessaging folder from original repo
-          rm -rf firebase-inappmessaging
-          cp -r ../original-repo/firebase-inappmessaging .
+          # Create a temporary directory for the merge
+          mkdir -p ../temp-merge
+
+          # Copy the original repo's firebase-inappmessaging into the temp directory
+          cp -r ../original-repo/firebase-inappmessaging ../temp-merge/
+
+          # Use git merge-file to merge specific files
+          echo "Merging files from original repo..."
+
+          # For each file in the original repo, try to merge it
+          find ../temp-merge/firebase-inappmessaging -type f | while read -r orig_file; do
+            rel_path=${orig_file#"../temp-merge/"}
+            your_file="$rel_path"
+
+            if [ -f "$your_file" ]; then
+              # Create a temp copy of your current file
+              cp "$your_file" "${your_file}.base"
+
+              # Try to merge the files
+              if ! git merge-file "$your_file" "${your_file}.base" "$orig_file"; then
+                echo "Conflict detected in $your_file"
+                rm "${your_file}.base"
+                echo "conflict_detected=true" >> $GITHUB_OUTPUT
+                git checkout -- "$your_file"  # Restore the original file
+                exit 1
+              fi
+              rm "${your_file}.base"
+            else
+              # File doesn't exist in your repo, copy it
+              mkdir -p "$(dirname "$your_file")"
+              cp "$orig_file" "$your_file"
+            fi
+          done
+
+          # If we got here, there were no conflicts
 
           # Update version in gradle.properties
           sed -i "s/version=.*/version=${{ steps.compare-versions.outputs.new_version }}/" firebase-inappmessaging/gradle.properties
 
           # Commit changes
           git add firebase-inappmessaging
-          git commit -m "Sync firebase-inappmessaging to version ${{ steps.compare-versions.outputs.new_version }}"
+          git commit -m "Merge firebase-inappmessaging changes from version ${{ steps.compare-versions.outputs.new_version }}"
 
           # Try to merge into main
           git checkout main
