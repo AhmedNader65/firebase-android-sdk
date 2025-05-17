@@ -69,24 +69,23 @@ jobs:
         id: pull-changes
         if: steps.compare-versions.outputs.update_needed == 'true'
         run: |
+          # Move to your repository directory
+          cd your-repo
+
           # Configure Git
           git config user.name "GitHub Actions Bot"
           git config user.email "actions@github.com"
-
-          # Get the latest release branch
-          LATEST_BRANCH=$(git -C ../original-repo for-each-ref --sort=-committerdate refs/remotes/origin/ --format='%(refname:short)' | grep -E 'releases/m[0-9]+\.release$' | grep -v '\-test' | head -n 1 | sed 's|origin/||' || echo "main")
-          echo "Latest branch found: $LATEST_BRANCH"
 
           # Create a new branch for our update
           git checkout -b update-firebase-inappmessaging-${{ steps.compare-versions.outputs.new_version }}
 
           # Add the original repo as a remote to fetch from it
           git remote add firebase-original ../original-repo
-          git fetch firebase-original
+          git fetch firebase-original ${{ steps.find-branch.outputs.branch }}
 
           # Try to merge only the firebase-inappmessaging directory from the original repo
-          echo "Attempting to merge firebase-inappmessaging from $LATEST_BRANCH"
-          if git merge -X subtree=firebase-inappmessaging firebase-original/$LATEST_BRANCH --allow-unrelated-histories; then
+          echo "Attempting to merge firebase-inappmessaging from ${{ steps.find-branch.outputs.branch }}"
+          if git merge -X subtree=firebase-inappmessaging firebase-original/${{ steps.find-branch.outputs.branch }} --allow-unrelated-histories; then
             echo "Merge successful"
             echo "conflict_detected=false" >> $GITHUB_OUTPUT
 
