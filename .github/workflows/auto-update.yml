@@ -39,8 +39,7 @@ jobs:
           cd original-repo
           echo "Listing remote branches:"
           git branch -r
-          LATEST_BRANCH=$(git branch -r | grep 'origin/releases/' | sort -V | tail -n 1 | sed 's|origin/||' || echo "main")
-          if [ -z "$LATEST_BRANCH" ]; then
+          LATEST_BRANCH=$(git for-each-ref --sort=-committerdate refs/remotes/origin/releases/ --format='%(refname:short)' | head -n 1 | sed 's|origin/||' || echo "main")          if [ -z "$LATEST_BRANCH" ]; then
             LATEST_BRANCH="main"
           fi
           echo "Latest release branch: $LATEST_BRANCH"
@@ -77,7 +76,7 @@ jobs:
 
           # Back up critical files
           mkdir -p ../backup
-          cp -r firebase-inappmessaging/build.gradle ../backup/ || true
+          cp -r firebase-inappmessaging/firebase-inappmessaging.gradle ../backup/ || true
           cp -r firebase-inappmessaging/ktx ../backup/ktx || true
           cp -r firebase-inappmessaging/src/test/java/com/google/firebase/inappmessaging/AbtIntegrationHelperTest.java ../backup/ || true
 
