@@ -55,7 +55,7 @@ jobs:
           ORIGINAL_VERSION=$(grep '^version=' original-repo/firebase-inappmessaging/gradle.properties | cut -d'=' -f2 || echo "0.0.0")
           echo "Your version: $YOUR_VERSION"
           echo "Original version: $ORIGINAL_VERSION"
-          if [ "$YOUR_VERSION" < "$ORIGINAL_VERSION" ]; then
+          if [ "$(printf '%s\n' "$YOUR_VERSION" "$ORIGINAL_VERSION" | sort -V | head -n1)" = "$YOUR_VERSION" ] && [ "$YOUR_VERSION" != "$ORIGINAL_VERSION" ]; then
             echo "Versions differ. Proceeding with update."
             echo "update_needed=true" >> $GITHUB_OUTPUT
             echo "new_version=$ORIGINAL_VERSION" >> $GITHUB_OUTPUT
