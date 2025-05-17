@@ -80,6 +80,7 @@ jobs:
           echo "Finding common base commit between our repo and original repo..."
           git remote add firebase-original ../original-repo || true
           git fetch firebase-original ${{ steps.find-branch.outputs.branch }} --no-tags
+          echo "Fetched firebase-original ${{ steps.find-branch.outputs.branch }}"
           
           # Find the merge base or earliest commit if none exists
           if git merge-base HEAD firebase-original/${{ steps.find-branch.outputs.branch }} &>/dev/null; then
