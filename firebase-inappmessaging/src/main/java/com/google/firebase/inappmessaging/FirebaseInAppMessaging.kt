@@ -57,9 +57,6 @@ class FirebaseInAppMessaging @VisibleForTesting @Inject constructor(
             get() = FirebaseApp.getInstance().get(FirebaseInAppMessaging::class.java)
         private const val SEGMENT = "segment"
         private const val MIN_ARTICLE_VIEWS = "min_article_views"
-        fun getInstance(): FirebaseInAppMessaging {
-            return instance
-        }
     }
 
     val isAutomaticDataCollectionEnabled: Boolean

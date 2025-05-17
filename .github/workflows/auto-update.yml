@@ -55,14 +55,14 @@ jobs:
 
           mkdir -p original-repo
           cd original-repo
-          
+
           # Try first with --depth=1 to minimize data transfer
           if ! retry_with_backoff git clone --depth=1 https://github.com/firebase/firebase-android-sdk.git .; then
             echo "Shallow clone failed, trying full clone..."
             rm -rf * .git
             retry_with_backoff git clone https://github.com/firebase/firebase-android-sdk.git .
           fi
-          
+
           if [ $? -ne 0 ]; then
             echo "Failed to clone original repository"
             exit 1
@@ -75,16 +75,16 @@ jobs:
           cd original-repo
           echo "Listing remote branches:"
           git branch -r
-          
+
           # Find latest release branch
           LATEST_BRANCH=$(git for-each-ref --sort=-committerdate refs/remotes/origin/ --format='%(refname:short)' | grep -E 'releases/m[0-9]+\.release$' | grep -v '\-test' | head -n 1 | sed 's|origin/||' || echo "main")
-          
+
           if [ -z "$LATEST_BRANCH" ]; then
             LATEST_BRANCH="main"
           fi
-          
+
           echo "Latest release branch: $LATEST_BRANCH"
-          
+
           # Checkout the branch safely
           git checkout $LATEST_BRANCH || git checkout -b $LATEST_BRANCH origin/$LATEST_BRANCH || {
             echo "Failed to checkout $LATEST_BRANCH, falling back to main"
@@ -94,7 +94,7 @@ jobs:
               exit 1
             }
           }
-          
+
           echo "branch=$LATEST_BRANCH" >> $GITHUB_OUTPUT
         shell: bash
 
@@ -103,10 +103,10 @@ jobs:
         run: |
           YOUR_VERSION=$(grep '^version=' your-repo/firebase-inappmessaging/gradle.properties | cut -d'=' -f2 || echo "0.0.0")
           ORIGINAL_VERSION=$(grep '^version=' original-repo/firebase-inappmessaging/gradle.properties | cut -d'=' -f2 || echo "0.0.0")
-          
+
           echo "Your version: $YOUR_VERSION"
           echo "Original version: $ORIGINAL_VERSION"
-          
+
           # Compare versions
           if [ "$(printf '%s\n' "$YOUR_VERSION" "$ORIGINAL_VERSION" | sort -V | head -n1)" = "$YOUR_VERSION" ] && [ "$YOUR_VERSION" != "$ORIGINAL_VERSION" ]; then
             echo "Versions differ. Proceeding with update."
@@ -130,56 +130,79 @@ jobs:
 
           # Create a new branch for the update
           git checkout -b update-firebase-inappmessaging-${{ steps.compare-versions.outputs.new_version }}
-          
+
           # Create a backup of our current firebase-inappmessaging directory
           echo "Creating backup of current firebase-inappmessaging directory..."
           mkdir -p ../backup
           cp -r firebase-inappmessaging ../backup/
-          
-          # Create a diff of our customizations using direct comparison
-          echo "Creating diff of customizations..."
+
+          # Create a diff of our customizations excluding gradle.properties
+          echo "Creating diff of customizations (excluding gradle.properties)..."
           mkdir -p ../diffs
-          diff -Naur ../original-repo/firebase-inappmessaging firebase-inappmessaging > ../diffs/our-changes.patch || true
           
+          # Find all files in firebase-inappmessaging directory, excluding gradle.properties
+          find firebase-inappmessaging -type f -not -path "*/\.*" -not -name "gradle.properties" | while read file; do
+            orig_file="../original-repo/${file}"
+            if [ -f "$orig_file" ]; then
+              mkdir -p "../diffs/$(dirname $file)"
+              diff -u "$orig_file" "$file" >> ../diffs/our-changes.patch || true
+            fi
+          done
+
           # Copy the original firebase-inappmessaging directory
           echo "Copying firebase-inappmessaging from original repo..."
           rm -rf firebase-inappmessaging
           cp -r ../original-repo/firebase-inappmessaging .
-          
-          # Update version in gradle.properties
+
+          # Explicitly set our version in gradle.properties
+          echo "Updating version in gradle.properties to ${{ steps.compare-versions.outputs.new_version }}"
           sed -i "s/version=.*/version=${{ steps.compare-versions.outputs.new_version }}/" firebase-inappmessaging/gradle.properties
-          
+
           # Commit the updated files from original repo
           git add firebase-inappmessaging
           git commit -m "Update firebase-inappmessaging to version ${{ steps.compare-versions.outputs.new_version }}"
-          
+
           # Try to apply our custom changes on top using patch
           echo "Applying our customizations..."
-          if patch -p0 -N --dry-run < ../diffs/our-changes.patch; then
+          if [ -s ../diffs/our-changes.patch ] && patch -p0 -N --dry-run < ../diffs/our-changes.patch; then
             patch -p0 < ../diffs/our-changes.patch
             git add firebase-inappmessaging
             git commit -m "Applied our customizations to firebase-inappmessaging ${{ steps.compare-versions.outputs.new_version }}"
-          
+
             echo "conflict_detected=false" >> $GITHUB_OUTPUT
           else
-            echo "Patch cannot be applied cleanly. Applying essential customizations manually..."
+            echo "Patch cannot be applied cleanly or is empty. Applying essential customizations manually..."
+
+            # Apply essential customizations manually 
+            # (gradle build files are critical for JitPack integration)
+            if [ -f ../backup/firebase-inappmessaging/firebase-inappmessaging.gradle ]; then
+              cp ../backup/firebase-inappmessaging/firebase-inappmessaging.gradle firebase-inappmessaging/
+            fi
           
-            # Apply essential customizations manually (like the gradle publishing config)
-            cp ../backup/firebase-inappmessaging/firebase-inappmessaging.gradle firebase-inappmessaging/
+            # Copy any kotlin files that might contain customizations
+            for kotlinFile in $(find ../backup/firebase-inappmessaging -name "*.kt"); do
+              relPath=${kotlinFile#../backup/}
+              origFile="../original-repo/$relPath"
+              if [ -f "$origFile" ] && ! diff -q "$origFile" "$kotlinFile" > /dev/null; then
+                cp "$kotlinFile" "$relPath"
+              fi
+            done
+          
+            # Ensure the version is properly set
             sed -i "s/version=.*/version=${{ steps.compare-versions.outputs.new_version }}/" firebase-inappmessaging/gradle.properties
-          
+
             git add firebase-inappmessaging
             git commit -m "Applied essential customizations to firebase-inappmessaging ${{ steps.compare-versions.outputs.new_version }}"
-          
+
             echo "conflict_detected=partial" >> $GITHUB_OUTPUT
           fi
-          
+
           # Try to merge into main
           git checkout main
           if git merge --no-ff update-firebase-inappmessaging-${{ steps.compare-versions.outputs.new_version }}; then
             echo "Merge successful."
             git push origin main
-          
+
             # Create tag for JitPack
             git tag v${{ steps.compare-versions.outputs.new_version }}
             git push origin v${{ steps.compare-versions.outputs.new_version }}
@@ -188,11 +211,11 @@ jobs:
             echo "Merge conflict detected!"
             git merge --abort
             git checkout main
-          
+
             # Create new branch with changes for manual review
             git checkout update-firebase-inappmessaging-${{ steps.compare-versions.outputs.new_version }}
             git push origin update-firebase-inappmessaging-${{ steps.compare-versions.outputs.new_version }}
-          
+
             echo "conflict_detected=true" >> $GITHUB_OUTPUT
           fi
         shell: bash
@@ -205,12 +228,12 @@ jobs:
           script: |
             const { owner, repo } = context.repo;
             const title = `Merge Conflict: firebase-inappmessaging v${{ steps.compare-versions.outputs.new_version }}`;
-            const body = `A merge conflict occurred while trying to update firebase-inappmessaging to version ${{ steps.compare-versions.outputs.new_version }} from branch ${{ steps.find-branch.outputs.branch }}. 
-            
+            const body = `A merge conflict occurred while trying to update firebase-inappmessaging to version ${{ steps.compare-versions.outputs.new_version }} from branch ${{ steps.find-branch.outputs.branch }}.
+
             Changes have been pushed to branch update-firebase-inappmessaging-${{ steps.compare-versions.outputs.new_version }} for manual review.
-            
+
             Please resolve conflicts manually and complete the merge.`;
-            
+
             await github.rest.issues.create({
               owner,
               repo,
@@ -228,11 +251,11 @@ jobs:
             const { owner, repo } = context.repo;
             const title = `Partial Update: firebase-inappmessaging v${{ steps.compare-versions.outputs.new_version }}`;
             const body = `The firebase-inappmessaging module was updated to version ${{ steps.compare-versions.outputs.new_version }}, but only essential customizations were applied.
-            
+
             Please review the changes and verify that all necessary customizations have been preserved.
-            
+
             The update has been merged into main and tagged as v${{ steps.compare-versions.outputs.new_version }} for JitPack.`;
-            
+
             await github.rest.issues.create({
               owner,
               repo,
