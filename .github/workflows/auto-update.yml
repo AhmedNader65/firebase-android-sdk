@@ -69,35 +69,49 @@ jobs:
         id: pull-changes
         if: steps.compare-versions.outputs.update_needed == 'true'
         run: |
-          # Move to your repository directory
           cd your-repo
 
-          # Configure Git
+          # Configure Git with larger buffer sizes and longer timeouts
+          git config --global http.postBuffer 524288000
+          git config --global core.compression 0
+          git config --global http.lowSpeedLimit 1000
+          git config --global http.lowSpeedTime 300
           git config user.name "GitHub Actions Bot"
           git config user.email "actions@github.com"
 
-          # Create a new branch for our update
+          # Alternative approach: instead of using git remote/fetch with the local directory,
+          # manually copy the needed files from the original repo
+          echo "Creating update branch..."
           git checkout -b update-firebase-inappmessaging-${{ steps.compare-versions.outputs.new_version }}
 
-          # Add the original repo as a remote to fetch from it
-          git remote add firebase-original ../original-repo
-          git fetch firebase-original ${{ steps.find-branch.outputs.branch }}
+          # Copy the firebase-inappmessaging directory from the original repo
+          echo "Copying files from original repo..."
+          rsync -a --exclude='.git' ../original-repo/firebase-inappmessaging/ ./firebase-inappmessaging/
 
-          # Try to merge only the firebase-inappmessaging directory from the original repo
-          echo "Attempting to merge firebase-inappmessaging from ${{ steps.find-branch.outputs.branch }}"
-          if git merge -X subtree=firebase-inappmessaging firebase-original/${{ steps.find-branch.outputs.branch }} --allow-unrelated-histories; then
-            echo "Merge successful"
+          # Preserve our customizations by restoring any tracked files with local modifications
+          for file in $(git ls-files --modified firebase-inappmessaging); do
+            echo "Detected modified file: $file"
+            if git diff --name-only $file | grep -q ""; then
+              echo "Keeping our modified version of $file"
+              git checkout -- $file
+            fi
+          done
+
+          # Stage the changes
+          git add firebase-inappmessaging
+
+          # Update version in gradle.properties
+          sed -i "s/version=.*/version=${{ steps.compare-versions.outputs.new_version }}/" firebase-inappmessaging/gradle.properties
+          git add firebase-inappmessaging/gradle.properties
+
+          # Commit changes
+          git commit -m "Update firebase-inappmessaging to version ${{ steps.compare-versions.outputs.new_version }}"
+
+          # Try to merge into main
+          git checkout main
+          if git merge --no-ff update-firebase-inappmessaging-${{ steps.compare-versions.outputs.new_version }}; then
+            echo "Merge successful."
             echo "conflict_detected=false" >> $GITHUB_OUTPUT
-
-            # Update version in gradle.properties
-            sed -i "s/version=.*/version=${{ steps.compare-versions.outputs.new_version }}/" firebase-inappmessaging/gradle.properties
-
-            # Commit version update
-            git commit -am "Update firebase-inappmessaging to version ${{ steps.compare-versions.outputs.new_version }}"
-
-            # Push changes to main
-            git checkout main
-            git merge --no-ff update-firebase-inappmessaging-${{ steps.compare-versions.outputs.new_version }}
             git push origin main
 
             # Create tag for JitPack
@@ -111,9 +125,6 @@ jobs:
             git checkout main
             git branch -D update-firebase-inappmessaging-${{ steps.compare-versions.outputs.new_version }}
           fi
-
-          # Clean up the temporary remote
-          git remote remove firebase-original
         shell: bash
 
       - name: Notify on merge conflict
