@@ -20,12 +20,13 @@ import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
-import com.google.firebase.concurrent.TestOnlyExecutors;
 import com.google.firebase.inappmessaging.FirebaseInAppMessagingClickListener;
 import com.google.firebase.inappmessaging.FirebaseInAppMessagingDismissListener;
 import com.google.firebase.inappmessaging.FirebaseInAppMessagingDisplayCallbacks;
 import com.google.firebase.inappmessaging.FirebaseInAppMessagingDisplayErrorListener;
 import com.google.firebase.inappmessaging.FirebaseInAppMessagingImpressionListener;
+import com.google.firebase.inappmessaging.TestOnlyExecutors;
+
 import java.util.concurrent.Executor;
 import org.junit.Before;
 import org.junit.Test;
