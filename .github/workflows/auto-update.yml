@@ -83,9 +83,10 @@ jobs:
             echo "Initial fetch failed, trying alternative approach..."
             # Try with a shallower depth as fallback
             git fetch firebase-original ${{ steps.find-branch.outputs.branch }} --depth=1 --no-tags || {
-            echo "ERROR: Could not fetch from firebase-original remote"
-            echo "conflict_detected=true" >> $GITHUB_OUTPUT
-            exit 1
+              echo "ERROR: Could not fetch from firebase-original remote"
+              echo "conflict_detected=true" >> $GITHUB_OUTPUT
+              exit 1
+            }
           }
   
           echo "Fetched firebase-original ${{ steps.find-branch.outputs.branch }}"
