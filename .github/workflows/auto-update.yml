@@ -76,14 +76,23 @@ jobs:
           git config user.name "GitHub Actions Bot"
           git config user.email "actions@github.com"
 
-          # Find the last commit we merged from the original repo
-          echo "Finding last merged commit from original repo..."
-          LAST_MERGE_COMMIT=$(git log --grep="Update firebase-inappmessaging to version" --format="%H" -n 1)
-          echo "Last merge commit: $LAST_MERGE_COMMIT"
-
+          # Find the common base between our repo and the original repo
+          echo "Finding common base commit between our repo and original repo..."
+          git remote add firebase-original ../original-repo || true
+          git fetch firebase-original ${{ steps.find-branch.outputs.branch }} --no-tags
+          
+          # Find the merge base or earliest commit if none exists
+          if git merge-base HEAD firebase-original/${{ steps.find-branch.outputs.branch }} &>/dev/null; then
+          LAST_MERGE_COMMIT=$(git merge-base HEAD firebase-original/${{ steps.find-branch.outputs.branch }})
+            echo "Found common ancestor: $LAST_MERGE_COMMIT"
+          else
+            echo "No common ancestor found, using current HEAD as base"
+            LAST_MERGE_COMMIT=$(git rev-parse HEAD)
+          fi
+          
           # Create a patch of our customizations since that commit
-          echo "Creating patch of our customizations..."
-          git format-patch $LAST_MERGE_COMMIT --stdout > ../our-changes.patch
+          echo "Creating patch of our customizations in firebase-inappmessaging directory only..."
+          git format-patch $LAST_MERGE_COMMIT --stdout -- firebase-inappmessaging/ > ../our-changes.patch
 
           # Create a new branch for the update
           git checkout -b update-firebase-inappmessaging-${{ steps.compare-versions.outputs.new_version }}
