@@ -24,7 +24,7 @@ import com.google.firebase.components.ComponentRegistrar
 
 /** Returns the [FirebaseInAppMessaging] instance of the default [FirebaseApp]. */
 val Firebase.inAppMessaging: FirebaseInAppMessaging
-  get() = FirebaseInAppMessaging.getInstance()
+  get() = FirebaseInAppMessaging.instance
 
 /** @suppress */
 @Keep
