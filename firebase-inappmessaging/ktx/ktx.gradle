@@ -11,18 +11,11 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-
+import java.util.Properties
 plugins {
-    id 'firebase-library'
+    id("com.android.library")
     id("kotlin-android")
-}
-
-firebaseLibrary {
-    libraryGroup = "inappmessaging"
-    publishJavadoc = false
-    releaseNotes { 
-        enabled.set(false)
-    }
+    id 'maven-publish'
 }
 
 android {
@@ -47,10 +40,27 @@ android {
     testOptions.unitTests.includeAndroidResources = true
 }
 
+props = Properties().apply {
+    file("../gradle.properties").inputStream().use { load(it) }
+}
+version = props.getProperty("version", "0.0.0")
+publishing {
+    publications {
+        release(MavenPublication) {
+            groupId = 'com.github.AhmedNader65'
+            artifactId = 'firebase-inappmessaging-ktx'
+            version = version
+            afterEvaluate {
+                from components.release
+            }
+        }
+    }
+}
+
 dependencies {
     api(project(":firebase-inappmessaging"))
-    api("com.google.firebase:firebase-common:21.0.0")
-    api("com.google.firebase:firebase-common-ktx:21.0.0")
+    implementation("com.google.firebase:firebase-common:21.0.0")
+    implementation("com.google.firebase:firebase-common-ktx:21.0.0")
 
     implementation("com.google.firebase:firebase-components:18.0.0")
 

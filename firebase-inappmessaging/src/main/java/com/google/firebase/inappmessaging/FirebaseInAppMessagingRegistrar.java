@@ -89,7 +89,7 @@ public class FirebaseInAppMessagingRegistrar implements ComponentRegistrar {
             .factory(this::providesFirebaseInAppMessaging)
             .eagerInDefaultApp()
             .build(),
-        LibraryVersionComponent.create(LIBRARY_NAME, BuildConfig.VERSION_NAME));
+        LibraryVersionComponent.create(LIBRARY_NAME, "1.0"));
   }
 
   private FirebaseInAppMessaging providesFirebaseInAppMessaging(ComponentContainer container) {

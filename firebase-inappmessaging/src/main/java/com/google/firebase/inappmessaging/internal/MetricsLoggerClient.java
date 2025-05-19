@@ -21,7 +21,6 @@ import android.os.Bundle;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.analytics.connector.AnalyticsConnector;
 import com.google.firebase.annotations.concurrent.Blocking;
-import com.google.firebase.inappmessaging.BuildConfig;
 import com.google.firebase.inappmessaging.CampaignAnalytics;
 import com.google.firebase.inappmessaging.ClientAppInfo;
 import com.google.firebase.inappmessaging.DismissType;
@@ -196,7 +195,7 @@ public class MetricsLoggerClient {
   private CampaignAnalytics.Builder createCampaignAnalyticsBuilder(
       InAppMessage message, String installationId) {
     return CampaignAnalytics.newBuilder()
-        .setFiamSdkVersion(BuildConfig.VERSION_NAME)
+        .setFiamSdkVersion("1.0")
         .setProjectNumber(firebaseApp.getOptions().getGcmSenderId())
         .setCampaignId(message.getCampaignMetadata().getCampaignId())
         .setClientApp(
