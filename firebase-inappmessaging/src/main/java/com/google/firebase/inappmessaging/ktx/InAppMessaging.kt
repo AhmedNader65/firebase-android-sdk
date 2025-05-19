@@ -35,7 +35,7 @@ import com.google.firebase.ktx.Firebase
  * [FAQ about this initiative.](https://firebase.google.com/docs/android/kotlin-migration)
  */
 val Firebase.inAppMessaging: FirebaseInAppMessaging
-  get() = FirebaseInAppMessaging.instance
+  get() = FirebaseInAppMessaging.getInstance()
 
 /**
  * @suppress
