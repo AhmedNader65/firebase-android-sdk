@@ -37,7 +37,7 @@ class FirebaseInAppMessaging @VisibleForTesting @Inject constructor(
         return callForeground(name!!)
     }
     var minArticleViews: Long = 0L
-    lateinit var userSegments: List<String>
+    var userSegments: List<String> = listOf()
     fun setPrefAndSegments(minViews: Long, segments: List<String>) {
         userSegments = segments
         minArticleViews = minViews
