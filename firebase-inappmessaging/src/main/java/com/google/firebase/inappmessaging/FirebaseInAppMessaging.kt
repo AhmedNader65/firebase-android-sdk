@@ -1,5 +1,6 @@
 package com.google.firebase.inappmessaging
 
+import android.util.Log
 import androidx.annotation.VisibleForTesting
 import com.google.firebase.FirebaseApp
 import com.google.firebase.inappmessaging.internal.*
@@ -30,7 +31,13 @@ class FirebaseInAppMessaging @VisibleForTesting @Inject constructor(
     fun runAdvanceFirebaseCheck() {
         val unused = inAppMessageStreamManager
             .createFirebaseInAppMessageStream()
-            .subscribe { content: List<TriggeredInAppMessage> -> triggerInAppMessage(content) }
+            .subscribe ({ content: List<TriggeredInAppMessage> -> triggerInAppMessage(content) },
+        { throwable ->
+            Logging.loge(
+                "runAdvanceFirebaseCheck():onError() called..." +
+                throwable.message
+            )
+        })
     }
 
     fun callNotifier(name: String?) : Boolean {
@@ -46,9 +53,6 @@ class FirebaseInAppMessaging @VisibleForTesting @Inject constructor(
         firebaseInstallations.id.addOnSuccessListener(lightWeightExecutor) { id ->
             Logging.logi("Starting InAppMessaging runtime with Installation ID $id")
         }
-        val unused: Disposable = inAppMessageStreamManager
-            .createFirebaseInAppMessageStream()
-            .subscribe { triggerInAppMessage(it) }
     }
 
     companion object {
