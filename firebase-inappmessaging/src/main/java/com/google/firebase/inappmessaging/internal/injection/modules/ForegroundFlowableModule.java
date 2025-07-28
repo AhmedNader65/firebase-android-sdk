@@ -34,11 +34,12 @@ public class ForegroundFlowableModule {
   @Provides
   @Singleton
   @AppForeground
-  public ConnectableFlowable<String> providesAppForegroundEventStream() {
-    ForegroundNotifier notifier = ForegroundNotifier.INSTANCE;
+  public ConnectableFlowable<String> providesAppForegroundEventStream(Application application) {
+    ForegroundNotifier notifier = new ForegroundNotifier();
     ConnectableFlowable<String> foregroundFlowable = notifier.foregroundFlowable();
     foregroundFlowable.connect();
 
+    application.registerActivityLifecycleCallbacks(notifier);
     return foregroundFlowable;
   }
 }

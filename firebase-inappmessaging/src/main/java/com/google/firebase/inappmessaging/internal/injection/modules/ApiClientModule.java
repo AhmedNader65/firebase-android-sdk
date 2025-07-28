@@ -20,7 +20,6 @@ import com.google.firebase.events.Subscriber;
 import com.google.firebase.inappmessaging.internal.ApiClient;
 import com.google.firebase.inappmessaging.internal.DataCollectionHelper;
 import com.google.firebase.inappmessaging.internal.GrpcClient;
-import com.google.firebase.inappmessaging.internal.ProgramaticContextualTriggers;
 import com.google.firebase.inappmessaging.internal.ProviderInstaller;
 import com.google.firebase.inappmessaging.internal.SharedPreferencesUtils;
 import com.google.firebase.inappmessaging.internal.TestDeviceHelper;
@@ -48,11 +47,7 @@ public class ApiClientModule {
     this.firebaseInstallations = firebaseInstallations;
     this.clock = clock;
   }
-  @Provides
-  @FirebaseAppScope
-  ProgramaticContextualTriggers providesProgramaticContextualTriggers() {
-      return new ProgramaticContextualTriggers();
-  }
+
   @Provides
   FirebaseInstallationsApi providesFirebaseInstallations() {
     return firebaseInstallations;
