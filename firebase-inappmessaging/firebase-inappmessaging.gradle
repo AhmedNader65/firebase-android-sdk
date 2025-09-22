@@ -12,22 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-
 plugins {
-    id 'firebase-library'
+    id("com.android.library")
     id("kotlin-android")
     id 'com.google.protobuf'
-    id 'firebase-vendor'
-}
-
-firebaseLibrary {
-    libraryGroup = "inappmessaging"
-    testLab.enabled = true
-    releaseNotes {
-        name.set("{{inappmessaging}}")
-        versionName.set("inappmessaging")
-    }
+    id 'maven-publish'
 }
 
 protobuf {
@@ -54,12 +43,54 @@ protobuf {
         }
     }
 }
+def props = new Properties()
+file('gradle.properties').withInputStream { props.load(it) }
+version = props.getProperty('version', '0.0.0')
+
+publishing {
+    publications {
+        release(MavenPublication) {
+            groupId = 'com.github.AhmedNader65'
+            artifactId = 'firebase-inappmessaging'
+            version = project.version
+
+            afterEvaluate {
+                from components.findByName('release')
+                pom {
+                    name = 'Firebase In-App Messaging'
+                    description = 'Firebase In-App Messaging Android SDK'
+                    url = 'https://github.com/AhmedNader65/firebase-android-sdk'
+                    licenses {
+                        license {
+                            name = 'The Apache License, Version 2.0'
+                            url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                        }
+                    }
+                    developers {
+                        developer {
+                            id = 'AhmedNader65'
+                            name = 'Ahmed Nader'
+                        }
+                    }
+                    scm {
+                        connection = 'scm:git:git://github.com/AhmedNader65/firebase-android-sdk.git'
+                        developerConnection = 'scm:git:ssh://github.com/AhmedNader65/firebase-android-sdk.git'
+                        url = 'https://github.com/AhmedNader65/firebase-android-sdk'
+                    }
+                }
+            }
+        }
+    }
+}
 
 android {
     adbOptions {
         timeOutInMs 60 * 1000
     }
 
+    buildFeatures {
+        buildConfig = true
+    }
     namespace "com.google.firebase.inappmessaging"
     compileSdkVersion project.compileSdkVersion
     defaultConfig {
@@ -69,6 +100,11 @@ android {
       versionName version
       testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
       consumerProguardFiles 'proguard.txt'
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+        }
     }
     sourceSets {
         main {
@@ -95,6 +131,7 @@ android {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
+    kotlinOptions { jvmTarget = "1.8" }
     testOptions {
         unitTests {
             includeAndroidResources = true
@@ -102,36 +139,23 @@ android {
     }
 }
 
-kotlin { compilerOptions { jvmTarget = JvmTarget.JVM_1_8 } }
-
-thirdPartyLicenses {
-    add 'Dagger', "${rootDir}/third_party/licenses/apache-2.0.txt"
-}
 
 dependencies {
-    vendor (libs.dagger.dagger) {
-         exclude group: "javax.inject", module: "javax.inject"
-     }
-
-    api project(':protolite-well-known-types')
-    api libs.playservices.tasks
-    api('com.google.firebase:firebase-abt:21.1.1') {
-         exclude group: 'com.google.firebase', module: 'firebase-common'
-         exclude group: 'com.google.firebase', module: 'firebase-components'
-     }
-    api(libs.firebase.common)
-    api(libs.firebase.components)
-    api("com.google.firebase:firebase-datatransport:18.2.0"){
-         exclude group: 'com.google.firebase', module: 'firebase-common'
-         exclude group: 'com.google.firebase', module: 'firebase-components'
-     }
-    api("com.google.firebase:firebase-installations:18.0.0") {
-         exclude group: 'com.google.firebase', module: 'firebase-common-ktx'
+    implementation(libs.dagger.dagger){
+        exclude group: 'javax.inject', module: 'javax.inject'
     }
-    api 'com.google.firebase:firebase-installations-interop:17.1.0'
-    api('com.google.firebase:firebase-measurement-connector:18.0.2') {
-         exclude group: 'com.google.firebase', module: 'firebase-common'
-     }
+    annotationProcessor(libs.dagger.compiler)
+    androidTestAnnotationProcessor(libs.dagger.compiler)
+    api libs.playservices.tasks
+    api project(':protolite-well-known-types')
+    api('com.google.firebase:firebase-abt:21.1.1')
+    api("com.google.firebase:firebase-common:20.4.2")
+    api("com.google.firebase:firebase-common-ktx:20.4.2")
+    api("com.google.firebase:firebase-components:17.1.1")
+    api("com.google.firebase:firebase-datatransport:18.2.0")
+    api("com.google.firebase:firebase-installations:17.2.0")
+    api('com.google.firebase:firebase-installations-interop:17.1.0')
+    api('com.google.firebase:firebase-measurement-connector:18.0.2')
 
     implementation libs.androidx.annotation
     implementation 'com.google.android.datatransport:transport-api:3.0.0'
@@ -151,11 +175,6 @@ dependencies {
     annotationProcessor libs.dagger.compiler
 
     androidTestAnnotationProcessor libs.dagger.compiler
-
-    testImplementation(project(":integ-testing")){
-        exclude group: 'com.google.firebase', module: 'firebase-common'
-        exclude group: 'com.google.firebase', module: 'firebase-components'
-    }
     testImplementation libs.androidx.test.core
     testImplementation libs.androidx.test.runner
     testImplementation libs.androidx.test.junit
@@ -169,10 +188,6 @@ dependencies {
          exclude group: 'com.google.protobuf', module: 'protobuf-java'
      }
 
-    androidTestImplementation(project(":integ-testing")){
-        exclude group: 'com.google.firebase', module: 'firebase-common'
-        exclude group: 'com.google.firebase', module: 'firebase-components'
-    }
     androidTestImplementation libs.androidx.annotation
     androidTestImplementation libs.androidx.test.runner
     androidTestImplementation libs.androidx.test.junit
